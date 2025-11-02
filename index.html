@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -7,27 +7,27 @@
   <!-- Fallback meta refresh after 5s (only in case JS is disabled) -->
   <meta http-equiv="refresh" content="5;url=https://example.com">
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;text-align:center;padding:40px;background:#f5f6f8;color:#111}
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;text-align:center;padding:40px;background:#f5f6f8;color:#111;direction:ltr}
     .card{max-width:720px;margin:0 auto;background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
     a.button{display:inline-block;padding:10px 14px;border-radius:8px;background:#0b74de;color:#fff;text-decoration:none;margin-top:14px}
     .muted{color:#666;font-size:0.95rem;margin-top:8px}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>جارٍ تحويلك — انتظر لحظة</h2>
-    <p class="muted">إذا لم يحدث التحويل تلقائيًا اضغط الزر أدناه.</p>
-    <a id="manualBtn" class="button" href="#">اضغط هنا للمتابعة</a>
+  <div class="card" role="status" aria-live="polite">
+    <h2>Redirecting — please wait</h2>
+    <p class="muted">You are being redirected to the destination site. If the redirect does not happen automatically, click the button below.</p>
+    <a id="manualBtn" class="button" href="#" rel="noopener noreferrer">Continue to site</a>
     <p class="muted" id="info"></p>
   </div>
 
 <script>
 (function(){
-  // ====== إعدادات: ضع رابط موقعك هنا ======
-  const TARGET = 'https://dating-friends9.blogspot.com/2025/11/datin-friend.html'; // <-- غيّر هذا للرابط الوجهة الخاص فيك
-  // =======================================
+  // ====== Settings: put your target site URL here ======
+  const TARGET = 'https://dating-friends9.blogspot.com/2025/11/datin-friend.html'; // <-- change to your destination
+  // ====================================================
 
-  // اجمع المعلومات الآمنة من المتصفح
+  // Collect safe info from the browser
   const referrer = document.referrer || '(direct)';
   const path = location.pathname || '/';
   const search = location.search || '';
@@ -36,24 +36,21 @@
   const ts = Date.now();
   const ua = navigator.userAgent || '';
 
-  // جهّز المعاملات التي سترسل للموقع الوجهة
-  // يمكن تعديل أسماء المعاملات حسب ما يتلقى موقعك (مثلاً utm_referrer بدل referrer)
+  // Prepare query parameters to send to the destination
   const params = new URLSearchParams();
   params.set('referrer', referrer);
   params.set('original_path', original);
   params.set('ts', ts.toString());
-  // إذا تريد ترسل user-agent أيضاً (اختياري). إلغاء التعليق إذا مطلوب.
+  // If you want to include user-agent uncomment the next line (optional)
   // params.set('ua', ua);
 
-  // إن أردت أن تحافظ على معاملات سابقة في الرابط الوجهة، ادمجها:
+  // Merge with existing target query params if any
   function joinUrlWithParams(base, extraParams) {
     try {
       const url = new URL(base);
-      // أبقِ على أي query موجودة في TARGET
       extraParams.forEach((value, key) => url.searchParams.set(key, value));
       return url.toString();
     } catch(e) {
-      // إذا TARGET ليست URL صحيحة، ببساطة ألصق بـ ?
       const sep = base.includes('?') ? '&' : '?';
       return base + sep + extraParams.toString();
     }
@@ -61,27 +58,24 @@
 
   const finalUrl = joinUrlWithParams(TARGET, params);
 
-  // عرض معلومات صغيرة للمستخدم أثناء التحويل
+  // Display small info to the user during redirect
   const info = document.getElementById('info');
-  info.textContent = `التحويل إلى ${TARGET} — مصدر الزيارة: ${referrer}`;
+  info.textContent = `Destination: ${TARGET} — Referrer: ${referrer}`;
 
-  // زر التحويل اليدوي
+  // Manual button
   const manualBtn = document.getElementById('manualBtn');
   manualBtn.href = finalUrl;
 
-  // نستخدم location.replace حتى لا يبقى صفحة الاختصار في تاريخ المتصفح
-  // انتبه: بعض وسائل الحماية أو سياسات الـCSP قد تمنع إعادة التوجيه التلقائية لنطاقات مختلفة
+  // Use location.replace to avoid leaving this page in history
   try {
-    // نترك مهلة صغيرة (100ms) لتمكين أي أدوات متصفح إذا احتاج المستخدم إلغاء
     setTimeout(()=> {
       location.replace(finalUrl);
-    }, 100);
+    }, 120); // short delay to let UI render
   } catch(e) {
     console.error('Redirect failed:', e);
   }
 
-  // --- اختياري: إرسال سجل للـanalytics الخاص بك عبر Beacon/fetch (غير مفعل إفتراضيًا) ---
-  // لو عندك endpoint تخزين (مثلاً https://your-logger.example/collect) تقدر تفعل السطر التالي:
+  // Optional: send a quick beacon to your logger endpoint (disabled by default)
   /*
   const loggerEndpoint = 'https://your-logger.example/collect';
   const payload = {
@@ -92,11 +86,9 @@
     target: TARGET,
     src: location.href
   };
-  // استخدم sendBeacon إن كان متاحاً (مناسب للانتقال السريع)
   if (navigator.sendBeacon) {
     navigator.sendBeacon(loggerEndpoint, JSON.stringify(payload));
   } else {
-    // fallback to fetch (non-blocking)
     fetch(loggerEndpoint, {method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}}).catch(()=>{});
   }
   */
