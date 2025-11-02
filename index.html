@@ -4,47 +4,70 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Redirecting…</title>
-  <!-- Fallback meta refresh after 5s (only in case JS is disabled) -->
-  <meta http-equiv="refresh" content="5;url=https://example.com">
+  <meta http-equiv="refresh" content="5;url=https://dating-friends9.blogspot.com">
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;text-align:center;padding:40px;background:#f5f6f8;color:#111;direction:ltr}
-    .card{max-width:720px;margin:0 auto;background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
-    a.button{display:inline-block;padding:10px 14px;border-radius:8px;background:#0b74de;color:#fff;text-decoration:none;margin-top:14px}
-    .muted{color:#666;font-size:0.95rem;margin-top:8px}
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial;
+      text-align: center;
+      padding: 40px;
+      background: #f5f6f8;
+      color: #111;
+    }
+    .card {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
+    a.button {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: #0b74de;
+      color: #fff;
+      text-decoration: none;
+      margin-top: 14px;
+    }
+    .muted {
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
   <div class="card" role="status" aria-live="polite">
     <h2>Redirecting — please wait</h2>
-    <p class="muted">You are being redirected to the destination site. If the redirect does not happen automatically, click the button below.</p>
+    <p class="muted">You are being redirected to the main site.  
+    If it doesn’t happen automatically, click below.</p>
     <a id="manualBtn" class="button" href="#" rel="noopener noreferrer">Continue to site</a>
     <p class="muted" id="info"></p>
   </div>
 
 <script>
 (function(){
-  // ====== Settings: put your target site URL here ======
-  const TARGET = 'https://dating-friends9.blogspot.com/2025/11/datin-friend.html'; // <-- change to your destination
-  // ====================================================
+  const TARGET = 'https://dating-friends9.blogspot.com/';
 
-  // Collect safe info from the browser
   const referrer = document.referrer || '(direct)';
-  const path = location.pathname || '/';
-  const search = location.search || '';
-  const hash = location.hash || '';
-  const original = path + search + hash;
   const ts = Date.now();
-  const ua = navigator.userAgent || '';
 
-  // Prepare query parameters to send to the destination
+  // Detect probable source (Facebook, Instagram, etc.)
+  let source = 'unknown';
+  if (referrer.includes('facebook')) source = 'facebook';
+  else if (referrer.includes('instagram')) source = 'instagram';
+  else if (referrer.includes('t.co')) source = 'twitter';
+  else if (referrer.includes('google')) source = 'google';
+  else if (referrer !== '(direct)') source = referrer;
+
+  // Add UTM tracking parameters
   const params = new URLSearchParams();
-  params.set('referrer', referrer);
-  params.set('original_path', original);
-  params.set('ts', ts.toString());
-  // If you want to include user-agent uncomment the next line (optional)
-  // params.set('ua', ua);
+  params.set('utm_source', source);
+  params.set('utm_medium', 'redirect');
+  params.set('utm_campaign', 'github_redirect');
+  params.set('ts', ts);
 
-  // Merge with existing target query params if any
   function joinUrlWithParams(base, extraParams) {
     try {
       const url = new URL(base);
@@ -58,40 +81,13 @@
 
   const finalUrl = joinUrlWithParams(TARGET, params);
 
-  // Display small info to the user during redirect
-  const info = document.getElementById('info');
-  info.textContent = `Destination: ${TARGET} — Referrer: ${referrer}`;
+  // Info for user
+  document.getElementById('info').textContent = 
+    `Source: ${source} | Redirecting to: ${TARGET}`;
+  document.getElementById('manualBtn').href = finalUrl;
 
-  // Manual button
-  const manualBtn = document.getElementById('manualBtn');
-  manualBtn.href = finalUrl;
-
-  // Use location.replace to avoid leaving this page in history
-  try {
-    setTimeout(()=> {
-      location.replace(finalUrl);
-    }, 120); // short delay to let UI render
-  } catch(e) {
-    console.error('Redirect failed:', e);
-  }
-
-  // Optional: send a quick beacon to your logger endpoint (disabled by default)
-  /*
-  const loggerEndpoint = 'https://your-logger.example/collect';
-  const payload = {
-    referrer: referrer,
-    original_path: original,
-    ts: ts,
-    ua: ua,
-    target: TARGET,
-    src: location.href
-  };
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(loggerEndpoint, JSON.stringify(payload));
-  } else {
-    fetch(loggerEndpoint, {method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'application/json'}}).catch(()=>{});
-  }
-  */
+  // Redirect after short delay
+  setTimeout(() => location.replace(finalUrl), 300);
 
 })();
 </script>
